@@ -4,6 +4,7 @@
 
 :root {
   --text-white: #fff;
+  --text-gray: #aeaeae;
 
   --bg-blue-elis: #f0f8ff;
   --bg-ghost-white: #f8f8ff;
@@ -11,6 +12,8 @@
   --fontSize-1: 1.125rem;
 
   --weight-bold: 700;
+
+  --shadow-calculator: #dcdcdc;
 }
 
 /*-----------------------------------*\
@@ -59,10 +62,6 @@ textarea {
 
 button {
   cursor: pointer;
-}
-
-ion-icon {
-  pointer-events: none;
 }
 
 address {

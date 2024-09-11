@@ -1,11 +1,13 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 // Замените API_KEY на ваш ключ API
 const API_KEY = import.meta.env.VITE_API_KEY
-console.log(import.meta.env)
-const baseCurrency = 'USD' // Базовая валюта (например, USD)
-const targetCurrency = 'EUR' // Целевая валюта (например, EUR)
+
+const baseCurrency = ref('RUB')
+const targetCurrency = ref('USD')
+const baseSum = ref(0)
+const targetSum = ref(0)
 let currencies = ref([])
 
 async function getAllCurrencies() {
@@ -49,11 +51,27 @@ async function getExchangeRate(baseCurrency, targetCurrency) {
   }
 }
 
+function changeTargetCurrency(event) {
+  targetCurrency = event.target.value
+}
+
+function changeBaseCurrency(event) {
+  baseCurrency = event.target.value
+}
+
 onMounted(() => {
   // Вызов функции для получения курса USD к EUR
-  getExchangeRate(baseCurrency, targetCurrency)
+  getExchangeRate(baseCurrency.value, targetCurrency.value)
   getAllCurrencies()
 })
+
+function handleBaseChange(event) {
+    
+}
+
+function handleTargetChange(event) {
+
+}
 </script>
 
 <template>
@@ -61,23 +79,38 @@ onMounted(() => {
     <div class="container">
       <p class="title">Currency Calculator</p>
       <div class="calc-side">
-        <input class="calc-input" type="text" />
-        <select name="" id="">
-          <option v-if="currencies.length !== 0" v-for="currency in currencies" value="currency">
-            {{ currency }}
-          </option>
-        </select>
+        <div class="input-container">
+          <input class="calc-input" type="text" placeholder="0" @input="handleBaseChange($event)" />
+          <span class="duplicate">{{ baseCurrency }}</span>
+        </div>
+        <div class="select-container">
+          <select class="calc-select" @change="changeBaseCurrency($event)" name="">
+            <option v-if="currencies.length !== 0" v-for="currency in currencies" :value="currency">
+              {{ currency }}
+            </option>
+          </select>
+        </div>
       </div>
       <div class="calc-center">
-        <img src="@/assets/icons/rotate-arrow.png" alt="rotate-arrow" class="rotate-arrow" />
+        <img src="@/assets/icons/rotate-arrow.png" alt="rotate-arrow" class="icon rotate-arrow" />
       </div>
       <div class="calc-side">
-        <input class="calc-input" type="text" />
-        <select name="" id="">
-          <option v-if="currencies.length !== 0" v-for="currency in currencies" value="currency">
-            {{ currency }}
-          </option>
-        </select>
+        <div class="input-container">
+          <input
+            class="calc-input"
+            type="text"
+            placeholder="0"
+            @input="handleTargetChange($event)"
+          />
+          <span class="duplicate">{{ baseCurrency }}</span>
+        </div>
+        <div class="select-container">
+          <select class="calc-select" @change="changeTargetCurrency($event)" name="">
+            <option v-if="currencies.length !== 0" v-for="currency in currencies" :value="currency">
+              {{ currency }}
+            </option>
+          </select>
+        </div>
       </div>
     </div>
   </div>
@@ -108,18 +141,48 @@ onMounted(() => {
   flex-direction: row;
   align-items: stretch;
   justify-content: stretch;
+  background: var(--text-white);
+  box-shadow: 0px 0px 20px var(--shadow-calculator);
+  border-radius: 6px;
+}
+.input-container {
+  display: flex;
+  justify-content: stretch;
+  align-items: center;
 }
 .calc-input {
   background: var(--text-white);
-  outline: none;
+  outline: transparent;
+  padding: 28px 8rem 28px 28px;
+  color: var(--text-gray);
+  border-radius: 6px;
+  font-family: sans-serif;
+}
+.duplicate {
+  font-family: sans-serif;
+  color: var(--text-gray);
+  border-left: 1px solid var(--text-gray);
+  padding-inline: 24px 12px;
+}
+.select-container {
+  padding: 28px;
+  border-radius: 0px 5px 5px 0px;
+  background: var(--text-white);
+}
+.calc-select {
+  outline: transparent;
+  border: 0px solid transparent;
+  background: var(--text-white);
 }
 .calc-center {
   display: flex;
   align-items: center;
   justify-content: center;
 }
+.icon {
+  width: 40px;
+  height: 40px;
+}
 .rotate-arrow {
-  width: 50px;
-  height: 50px;
 }
 </style>
