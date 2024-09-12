@@ -15,7 +15,7 @@ const localeToCurrencyMap = {
 }
 
 // выбранная валюта base - верхнее поле выбора, target - нижнее поле выбора
-let baseCurrency = ref()
+let baseCurrency = ref('RUB')
 let targetCurrency = ref('USD')
 // введённая сумма денег
 let baseSum = ref(1)
@@ -26,12 +26,14 @@ let currencies = ref([])
 let isRotate = ref(false)
 // курс валют
 let rate = 0
+// массивы валют, но для каждого select свой
+let baseSelect = ref([])
+let targetSelect = ref([])
 
 // Функция для установки начальной валюты относительно языка пользователя
 function setUserCurrency() {
   // Получаем локаль браузера
   const userLocale = navigator.language
-  console.log(navigator)
 
   // Определяем валюту по локали или используем значение по умолчанию
   baseCurrency.value = localeToCurrencyMap[userLocale] || 'RUB'
@@ -44,7 +46,8 @@ async function getAllCurrencies() {
     })
     const data = await response.json()
     currencies.value = Object.keys(data.data)
-    console.log(currencies.value)
+    baseSelect.value = getSelect(baseCurrency.value, currencies.value)
+    targetSelect.value = getSelect(targetCurrency.value, currencies.value)
   } catch (error) {
     console.error('Произошла ошибка при получении данных:', error)
   }
@@ -80,11 +83,13 @@ async function getExchangeRate(baseCurrency, targetCurrency) {
 async function changeBaseCurrency(event) {
   baseCurrency.value = event.target.value
   rate = await getExchangeRate(baseCurrency.value, targetCurrency.value)
+  targetSum.value = baseSum.value * rate
 }
 
 async function changeTargetCurrency(event) {
   targetCurrency.value = event.target.value
   rate = await getExchangeRate(baseCurrency.value, targetCurrency.value)
+  baseSum.value = targetSum.value / rate
 }
 
 onMounted(async () => {
@@ -108,9 +113,24 @@ function handleTargetChange(event) {
   baseSum.value = targetSum.value / rate
 }
 
+// убираем все лишние символы из строки кроме одной "."
 function deleteSymbols(event) {
-  event.target.value = event.target.value.replace(/\D+/g, '')
+  event.target.value = event.target.value.replace(/[^\d.]+/g, '')
+  const parts = event.target.value.split('.')
+  if (parts.length > 2) {
+    event.target.value = parts.shift() + '.' + parts.join('')
+  }
   return event.target.value
+}
+
+function getSelect(currency, currencies) {
+  const indexOfBaseCurrency = currencies.indexOf(currency)
+  const filteredCurrencies = Object.assign({}, currencies)
+  ;[filteredCurrencies[0], filteredCurrencies[indexOfBaseCurrency]] = [
+    filteredCurrencies[indexOfBaseCurrency],
+    filteredCurrencies[0]
+  ]
+  return filteredCurrencies
 }
 </script>
 
@@ -130,9 +150,17 @@ function deleteSymbols(event) {
           <span class="duplicate">{{ baseCurrency }}</span>
         </div>
         <div class="select-container">
-          <select class="calc-select" @change="changeBaseCurrency($event)" name="">
-            <option v-if="currencies.length !== 0" v-for="currency in currencies" :value="currency">
+          <select class="calc-select" @change="changeBaseCurrency($event)">
+            <option
+              v-if="currencies.length !== 0"
+              class="cals-option"
+              v-for="currency in baseSelect"
+              :value="currency"
+            >
               {{ currency }}
+            </option>
+            <option v-else class="cals-option" :value="baseCurrency">
+              {{ baseCurrency }}
             </option>
           </select>
         </div>
@@ -157,10 +185,16 @@ function deleteSymbols(event) {
           <span class="duplicate">{{ targetCurrency }}</span>
         </div>
         <div class="select-container">
-          <select class="calc-select" @change="changeTargetCurrency($event)" name="">
-            <option v-if="currencies.length !== 0" v-for="currency in currencies" :value="currency">
+          <select class="calc-select" @change="changeTargetCurrency($event)">
+            <option
+              v-if="currencies.length !== 0"
+              class="cals-option"
+              v-for="currency in targetSelect"
+              :value="currency"
+            >
               {{ currency }}
             </option>
+            <option v-else class="cals-option" :value="targetCurrency">{{ targetCurrency }}</option>
           </select>
         </div>
       </div>
