@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Calculator > should render correctly 1`] = `
+"<div data-v-4d714f65="" class="calc">
+  <div data-v-4d714f65="" class="container">
+    <p data-v-4d714f65="" class="title">Currency Calculator</p>
+    <div data-v-4d714f65="" class="calc-side">
+      <div data-v-4d714f65="" class="input-container"><input data-v-4d714f65="" class="calc-input" type="text" placeholder="..." value="1"><span data-v-4d714f65="" class="duplicate">RUB</span></div>
+      <div data-v-4d714f65="" class="select-container"><select data-v-4d714f65="" class="calc-select">
+          <option data-v-4d714f65="" class="cals-option" value="RUB">RUB</option>
+        </select></div>
+    </div>
+    <div data-v-4d714f65="" class="calc-center"><img data-v-4d714f65="" src="/src/assets/icons/circle-arrow.png" alt="circle-arrow" class="icon circle-arrow"></div>
+    <div data-v-4d714f65="" class="calc-side">
+      <div data-v-4d714f65="" class="input-container"><input data-v-4d714f65="" class="calc-input" type="text" placeholder="..." value="1"><span data-v-4d714f65="" class="duplicate">USD</span></div>
+      <div data-v-4d714f65="" class="select-container"><select data-v-4d714f65="" class="calc-select">
+          <option data-v-4d714f65="" class="cals-option" value="USD">USD</option>
+        </select></div>
+    </div>
+  </div>
+</div>"
+`;
