@@ -150,7 +150,7 @@ function getSelect(currency, currencies) {
           <span class="duplicate">{{ baseCurrency }}</span>
         </div>
         <div class="select-container">
-          <select class="calc-select" @change="changeBaseCurrency($event)" required>
+          <select class="calc-select" @change="changeBaseCurrency($event)">
             <option
               v-if="currencies.length !== 0"
               class="cals-option"
@@ -185,7 +185,7 @@ function getSelect(currency, currencies) {
           <span class="duplicate">{{ targetCurrency }}</span>
         </div>
         <div class="select-container">
-          <select class="calc-select" @change="changeTargetCurrency($event)" required>
+          <select class="calc-select" @change="changeTargetCurrency($event)">
             <option
               v-if="currencies.length !== 0"
               class="cals-option"
