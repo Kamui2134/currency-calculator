@@ -3,21 +3,45 @@ import { computed, onMounted, ref } from 'vue'
 
 // Замените API_KEY на ваш ключ API
 const API_KEY = import.meta.env.VITE_API_KEY
+const BASE_URL = import.meta.env.VITE_BASE_URL
 
-const baseCurrency = ref('RUB')
-const targetCurrency = ref('USD')
-const baseSum = ref(0)
-const targetSum = ref(0)
+// карта соотнесения языка, установленного в браузере, к валюте
+const localeToCurrencyMap = {
+  'en-US': 'USD',
+  'ru-RU': 'RUB',
+  'en-GB': 'GBP',
+  'ja-JP': 'JPY',
+  'fr-FR': 'EUR'
+}
+
+// выбранная валюта base - верхнее поле выбора, target - нижнее поле выбора
+let baseCurrency = ref()
+let targetCurrency = ref('USD')
+// введённая сумма денег
+let baseSum = ref(1)
+let targetSum = ref(1)
+// все доступные валюты
 let currencies = ref([])
+// переменная отвечающая за вращение circle-arrow
+let isRotate = ref(false)
+// курс валют
+let rate = 0
+
+// Функция для установки начальной валюты относительно языка пользователя
+function setUserCurrency() {
+  // Получаем локаль браузера
+  const userLocale = navigator.language
+  console.log(navigator)
+
+  // Определяем валюту по локали или используем значение по умолчанию
+  baseCurrency.value = localeToCurrencyMap[userLocale] || 'RUB'
+}
 
 async function getAllCurrencies() {
   try {
-    const response = await fetch(
-      `https://api.freecurrencyapi.com/v1/currencies?apikey=${API_KEY}`,
-      {
-        method: 'GET'
-      }
-    )
+    const response = await fetch(`${BASE_URL}/currencies?apikey=${API_KEY}`, {
+      method: 'GET'
+    })
     const data = await response.json()
     currencies.value = Object.keys(data.data)
     console.log(currencies.value)
@@ -28,9 +52,10 @@ async function getAllCurrencies() {
 
 // Функция для получения курса валют
 async function getExchangeRate(baseCurrency, targetCurrency) {
+  isRotate.value = true
   try {
     const response = await fetch(
-      `https://api.freecurrencyapi.com/v1/latest?apikey=${API_KEY}&currencies=${targetCurrency}&base_currency=${baseCurrency}`,
+      `${BASE_URL}/latest?apikey=${API_KEY}&currencies=${targetCurrency}&base_currency=${baseCurrency}`,
       {
         method: 'GET'
       }
@@ -45,32 +70,47 @@ async function getExchangeRate(baseCurrency, targetCurrency) {
     const rate = data.data[targetCurrency] // Получение курса для нужной валюты
 
     console.log(`Курс ${baseCurrency} к ${targetCurrency}: ${rate}`)
+    isRotate.value = false
     return rate
   } catch (error) {
     console.error('Произошла ошибка при получении данных:', error)
   }
 }
 
-function changeTargetCurrency(event) {
-  targetCurrency = event.target.value
+async function changeBaseCurrency(event) {
+  baseCurrency.value = event.target.value
+  rate = await getExchangeRate(baseCurrency.value, targetCurrency.value)
 }
 
-function changeBaseCurrency(event) {
-  baseCurrency = event.target.value
+async function changeTargetCurrency(event) {
+  targetCurrency.value = event.target.value
+  rate = await getExchangeRate(baseCurrency.value, targetCurrency.value)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await setUserCurrency()
   // Вызов функции для получения курса USD к EUR
-  getExchangeRate(baseCurrency.value, targetCurrency.value)
+  rate = await getExchangeRate(baseCurrency.value, targetCurrency.value)
+  // Вызов функции для получения всех доступных валют
   getAllCurrencies()
+  targetSum.value = baseSum.value * rate
 })
 
 function handleBaseChange(event) {
-    
+  let inputValue = deleteSymbols(event)
+  baseSum.value = inputValue
+  targetSum.value = baseSum.value * rate
 }
 
 function handleTargetChange(event) {
+  let inputValue = deleteSymbols(event)
+  targetSum.value = inputValue
+  baseSum.value = targetSum.value / rate
+}
 
+function deleteSymbols(event) {
+  event.target.value = event.target.value.replace(/\D+/g, '')
+  return event.target.value
 }
 </script>
 
@@ -80,7 +120,13 @@ function handleTargetChange(event) {
       <p class="title">Currency Calculator</p>
       <div class="calc-side">
         <div class="input-container">
-          <input class="calc-input" type="text" placeholder="0" @input="handleBaseChange($event)" />
+          <input
+            class="calc-input"
+            type="text"
+            placeholder="..."
+            @input="handleBaseChange($event)"
+            :value="baseSum"
+          />
           <span class="duplicate">{{ baseCurrency }}</span>
         </div>
         <div class="select-container">
@@ -92,17 +138,23 @@ function handleTargetChange(event) {
         </div>
       </div>
       <div class="calc-center">
-        <img src="@/assets/icons/rotate-arrow.png" alt="rotate-arrow" class="icon rotate-arrow" />
+        <img
+          src="@/assets/icons/circle-arrow.png"
+          alt="circle-arrow"
+          class="icon circle-arrow"
+          :class="{ rotate: isRotate }"
+        />
       </div>
       <div class="calc-side">
         <div class="input-container">
           <input
             class="calc-input"
             type="text"
-            placeholder="0"
+            placeholder="..."
             @input="handleTargetChange($event)"
+            :value="targetSum"
           />
-          <span class="duplicate">{{ baseCurrency }}</span>
+          <span class="duplicate">{{ targetCurrency }}</span>
         </div>
         <div class="select-container">
           <select class="calc-select" @change="changeTargetCurrency($event)" name="">
@@ -133,7 +185,7 @@ function handleTargetChange(event) {
   font-weight: var(--weight-bold);
   line-height: 1.25;
   text-align: left;
-  font-size: var(--fontSize-1);
+  font-size: var(--fontSize-2);
   font-family: sans-serif;
 }
 .calc-side {
@@ -163,16 +215,20 @@ function handleTargetChange(event) {
   color: var(--text-gray);
   border-left: 1px solid var(--text-gray);
   padding-inline: 24px 12px;
+  user-select: none;
 }
 .select-container {
   padding: 28px;
   border-radius: 0px 5px 5px 0px;
   background: var(--text-white);
+  user-select: none;
 }
 .calc-select {
   outline: transparent;
   border: 0px solid transparent;
   background: var(--text-white);
+  font-size: var(--fontSize-1);
+  font-weight: var(--weight-regular);
 }
 .calc-center {
   display: flex;
@@ -183,6 +239,15 @@ function handleTargetChange(event) {
   width: 40px;
   height: 40px;
 }
-.rotate-arrow {
+.circle-arrow.rotate {
+  animation: rotate 2s infinite linear;
+}
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
