@@ -89,7 +89,7 @@ async function changeBaseCurrency(event) {
 async function changeTargetCurrency(event) {
   targetCurrency.value = event.target.value
   rate = await getExchangeRate(baseCurrency.value, targetCurrency.value)
-  baseSum.value = targetSum.value / rate
+  targetSum.value = baseSum.value * rate
 }
 
 onMounted(async () => {
@@ -150,7 +150,7 @@ function getSelect(currency, currencies) {
           <span class="duplicate">{{ baseCurrency }}</span>
         </div>
         <div class="select-container">
-          <select class="calc-select" @change="changeBaseCurrency($event)">
+          <select class="calc-select" @change="changeBaseCurrency($event)" required>
             <option
               v-if="currencies.length !== 0"
               class="cals-option"
@@ -185,7 +185,7 @@ function getSelect(currency, currencies) {
           <span class="duplicate">{{ targetCurrency }}</span>
         </div>
         <div class="select-container">
-          <select class="calc-select" @change="changeTargetCurrency($event)">
+          <select class="calc-select" @change="changeTargetCurrency($event)" required>
             <option
               v-if="currencies.length !== 0"
               class="cals-option"
@@ -263,6 +263,7 @@ function getSelect(currency, currencies) {
   background: var(--text-white);
   font-size: var(--fontSize-1);
   font-weight: var(--weight-regular);
+  max-height: 20px;
 }
 .calc-center {
   display: flex;
@@ -282,6 +283,15 @@ function getSelect(currency, currencies) {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 664px) {
+  .calc-input {
+    padding: 28px 1rem 28px 28px;
+  }
+  .calc .container {
+    padding-inline: 16px;
   }
 }
 </style>
